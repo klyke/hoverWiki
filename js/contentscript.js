@@ -1,14 +1,17 @@
 var popupID = "hoverWikiBox";
 var paragraphID = "textPara";
 var popupWidth = 400;
+numCharacters = 500;
 div = null;
 para = null;
 img = null;
+extOn = true;
+showing = false;
+articlePrefix = "/wiki/";
 articleNotFoundText = "Sorry, we couldn't find that article."
 
 function start()
 {
-	console.log("Content script running");
 	$('[title]').removeAttr('title');
 	addDiv();
 	addMouseOverEvent();
@@ -16,29 +19,23 @@ function start()
 
 function addMouseOverEvent()
 {
-	console.log("adding events");
 	$('a').hover(function(e){
-		var x = e.clientX;
-		var y = e.clientY;
 		var link = $(this).attr("href");
-		var article = link.split("/").pop();
-		setPosition(x,y);
-		getPreview(article);
+		if(!showing && link.substring(0,6) == articlePrefix)
+		{
+			var x = parseInt(e.clientX, 10);
+			var y = parseInt(e.clientY, 10);
+			var article = link.split("/").pop();
+			showLoader(x,y);
+			getPreview(article);
+		}
 	}, function(){
 		makeInvisible();
 	});
-
-	// $('a').mouseleave(function(e){
-	// 	makeInvisible();
-	// });
 }
 
 function getPreview(article, x, y)
 {
-	console.log(article);
-
-	// var url = "https://en.wikipedia.org/w/api.php?action=parse&format=json&prop=text&section=0&redirects&page=" + article;
-
 	var url = "https://en.wikipedia.org/w/api.php?format=json&action=query&prop=extracts&exintro=&redirects&explaintext=&titles="+ article;
 	$.ajax({
         type: "GET",
@@ -53,8 +50,8 @@ function getPreview(article, x, y)
         		var pagesObj = data["query"]["pages"];
         		var articleID = Object.keys(pagesObj)[0];
         		var text = pagesObj[articleID]["extract"];
-
-	           	setText(text);
+        		firstParagraph = text.split("\n")[0];
+	           	setText(firstParagraph);
         	}
         	catch(err)
         	{
@@ -69,49 +66,54 @@ function getPreview(article, x, y)
 
 }
 
-
 function setText(text)
 {
-	img.style.display = "None";
+	if(text.length > numCharacters)
+		text = text.substring(0, numCharacters) + "...";
 
+	img.style.display = "None";
 	var node = document.createTextNode(text);
 	para.innerHTML = "";
 	div.style.width = popupWidth + "px";
 	para.appendChild(node);
+
+	divHeight = parseInt(div.clientHeight, 10);
+	pageHeight = parseInt(document.body.clientHeight, 10);
+	pageY = parseInt(window.pageYOffset, 10);
+	divY = parseInt(div.style.top,10);
+	relativeY = divY - pageY;
+	if(relativeY + divHeight > pageHeight)
+		div.style.top = divY - divHeight + "px";
 }
 
-function setPosition(x,y)
+function showLoader(x,y)
 {
-	img.style.display = "inline-block";
+	showing = true;
+	pageY = parseInt(window.pageYOffset, 10);
+	pageX = parseInt(window.pageXOffset, 10);
 
-	pageY = window.pageYOffset;
-	pageX = window.pageXOffset;
+	pageWidth = parseInt(document.body.clientWidth, 10);
+	pageHeight = parseInt(document.body.clientHeight, 10);
 
-	pageWidth = document.body.clientWidth;
-	pageHeight = document.body.clientHeight;
-
-	divHeight = div.clientHeight;
+	divHeight = parseInt(div.clientHeight, 10);
 
 	x += pageX;
 	y += pageY;
 
 	if(x + popupWidth > pageWidth)
-		x += -1*popupWidth;
-
-	if(y + divHeight > pageHeight)
-		y -= divHeight;
+		x -= popupWidth;
 
 	div.style.left = x+"px";
 	div.style.top = y+"px";
-
-	//div.style.backgroundImage = chrome.extension.getURL("./ajax-loader.gif");
+	div.style.width = "auto"
+	div.style.height = "auto"
+	img.style.display = "inline-block";
 
 	makeVisible()
 }
 
 function addDiv()
 {
-	console.log("Adding Div.");
 	var extensionOrigin = 'chrome-extension://' + chrome.runtime.id;
 	if (!location.ancestorOrigins.contains(extensionOrigin)) 
 	{
@@ -127,7 +129,6 @@ function addDiv()
 		para = document.createElement("p");
 		para.id = paragraphID;
 		div.appendChild(para);
-		
 		img = document.createElement("img")
 		img.src = chrome.extension.getURL("./ajax-loader.gif");
 		img.id = "loadingGif";
@@ -137,21 +138,19 @@ function addDiv()
 
 		$(document.body).append(div);
 	}
-	else
-	{
-		console.log("condition not met");
-	}
 }
 
 function makeVisible()
 {
+	showing = false;
 	div.style.display = "inline-block";
 }
 
 function makeInvisible()
 {
 	para.innerHTML = "";
-	//div.style.width = "auto";
+	div.clientWidth = 0
+	div.clientHeight = 0
 	div.style.display = "None";
 }
 
