@@ -5,7 +5,7 @@
 	"description":"Preview Wikipedia pages by hovering over a link",
 
 	"page_action": {
-		// "default_icon": "thumb1.png",
+		"default_icon": "wikiHoverLogo48.png",
 		"default_title": "hoverWiki"
 	}, 
 
@@ -13,7 +13,8 @@
 	// 	"128":"thumb1.png"
 	// 	},
 
-	"background": {
+	"background": 
+	{
 		"scripts": ["js/background.js"]
 	},
 
@@ -28,9 +29,11 @@
 	],
 
 	"permissions": [
-
+	"declarativeContent"
 	],
 
 	"web_accessible_resources": 
-	["ajax-loader.gif"]
+	["ajax-loader.gif", 
+	"wikiHoverLogo48off.png",
+	"popup.html"]
 }

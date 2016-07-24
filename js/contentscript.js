@@ -17,11 +17,16 @@ function start()
 	addMouseOverEvent();
 }
 
+function toggleExtOn()
+{
+	extOn = !extOn;
+}
+
 function addMouseOverEvent()
 {
 	$('a').hover(function(e){
 		var link = $(this).attr("href");
-		if(!showing && link.substring(0,6) == articlePrefix)
+		if(!showing && extOn && link.substring(0,6) == articlePrefix)
 		{
 			var x = parseInt(e.clientX, 10);
 			var y = parseInt(e.clientY, 10);
@@ -32,6 +37,11 @@ function addMouseOverEvent()
 	}, function(){
 		makeInvisible();
 	});
+}
+
+function addMouseMoveEvent()
+{
+	return;
 }
 
 function getPreview(article, x, y)
@@ -78,36 +88,45 @@ function setText(text)
 	para.appendChild(node);
 
 	divHeight = parseInt(div.clientHeight, 10);
+
 	pageHeight = parseInt(document.body.clientHeight, 10);
-	pageY = parseInt(window.pageYOffset, 10);
+	pageWidth = parseInt(document.body.clientWidth, 10);
+
+	offY = parseInt(window.pageYOffset, 10);
+	offX = parseInt(window.pageXOffset, 10);
+
 	divY = parseInt(div.style.top,10);
-	relativeY = divY - pageY;
+	divX = parseInt(div.style.left, 10);
+	
+
+	relativeY = divY - offY;
 	if(relativeY + divHeight > pageHeight)
 		div.style.top = divY - divHeight + "px";
+
+	relativeX = divX - offX;
+	if(relativeX + popupWidth > pageWidth)
+		div.style.left = relativeX - popupWidth + "px";
+
+
 }
 
 function showLoader(x,y)
 {
 	showing = true;
-	pageY = parseInt(window.pageYOffset, 10);
-	pageX = parseInt(window.pageXOffset, 10);
 
-	pageWidth = parseInt(document.body.clientWidth, 10);
-	pageHeight = parseInt(document.body.clientHeight, 10);
+	offY = parseInt(window.pageYOffset, 10);
+	offX = parseInt(window.pageXOffset, 10);
 
-	divHeight = parseInt(div.clientHeight, 10);
-
-	x += pageX;
-	y += pageY;
-
-	if(x + popupWidth > pageWidth)
-		x -= popupWidth;
+	x += offX;
+	y += offY;
 
 	div.style.left = x+"px";
 	div.style.top = y+"px";
+
 	div.style.width = "auto"
 	div.style.height = "auto"
 	img.style.display = "inline-block";
+
 
 	makeVisible()
 }
@@ -142,7 +161,6 @@ function addDiv()
 
 function makeVisible()
 {
-	showing = false;
 	div.style.display = "inline-block";
 }
 
@@ -152,9 +170,19 @@ function makeInvisible()
 	div.clientWidth = 0
 	div.clientHeight = 0
 	div.style.display = "None";
+	showing = false;
 }
 
 $(document).ready(function(){
 	start();
 });
 
+chrome.runtime.onMessage.addListener(
+	function(request, sender, sendResponse) {
+		if(request.callFunction)
+		{
+			if(request.callFunction == "toggleExtOn")
+				toggleExtOn();
+		}
+			
+	});
