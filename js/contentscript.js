@@ -15,6 +15,7 @@ function start()
 	$('[title]').removeAttr('title');
 	addDiv();
 	addMouseOverEvent();
+	addMouseMoveEvent();
 }
 
 function toggleExtOn()
@@ -41,7 +42,27 @@ function addMouseOverEvent()
 
 function addMouseMoveEvent()
 {
-	return;
+	$(document).mousemove(function(e)
+	{
+		if(showing)
+		{
+			// console.log("mousemove");
+			offY = parseInt(window.pageYOffset, 10);
+			offX = parseInt(window.pageXOffset, 10);
+			var x = e.clientX - offX;
+			var y = e.clientY + offY;
+			// console.log("(" + x + ", " + y + ")");
+
+			var divX = parseInt(div.style.left, 10);
+			var divY = parseInt(div.style.top, 10);
+
+			var deltaX = divX - x;
+			var deltaY = divY - y;
+
+			div.style.left = divX - deltaX + "px";
+			div.style.top = divY - deltaY + "px";
+		}
+	});
 }
 
 function getPreview(article, x, y)
