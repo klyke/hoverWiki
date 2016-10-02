@@ -1,17 +1,13 @@
 {
 	"manifest_version": 2, 
 	"name":"hoverWiki", 
-	"version":"0.0.1", 
+	"version":"1.0.1", 
 	"description":"Preview Wikipedia pages by hovering over a link",
 
 	"page_action": {
 		"default_icon": "wikiHoverLogo48.png",
 		"default_title": "hoverWiki"
 	}, 
-
-	// "icons":{
-	// 	"128":"thumb1.png"
-	// 	},
 
 	"background": 
 	{
@@ -21,7 +17,8 @@
 	"content_scripts": [
 	{
 		"matches":[
-			"*://*.wikipedia.org/*"
+			"http://*/*",
+			"https://*/*"
 		],
 		"js":["js/jquery-1.11.3.min.js", "js/contentscript.js"],
 		"run_at":"document_end"

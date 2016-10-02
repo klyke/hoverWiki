@@ -9,6 +9,8 @@ extOn = true;
 showing = false;
 articlePrefix = "/wiki/";
 articleNotFoundText = "Sorry, we couldn't find that article."
+bodyContentID = "mw-content-text";
+
 
 function start()
 {
@@ -23,17 +25,67 @@ function toggleExtOn()
 	extOn = !extOn;
 }
 
+function elementInBody(el)
+{
+	while(el && el.parentElement)
+	{
+		el = el.parentElement;
+		if(el.id && el.id == bodyContentID)
+		{
+			return true;
+		}
+	}	
+	return false;
+}
+
+function validLink(el)
+{	
+	var l = $(el).attr("href");
+	var valid = false;
+	var article = "";
+	var currentSite = window.location.hostname;
+	if(l.search("wikipedia.org") != -1 &&
+		currentSite.search("wikipedia.org") == -1)
+	{
+		var items = l.split("/");
+		if(items[items.length -2] == "wiki")
+		{
+			article = items.pop();
+			valid = true;
+		}
+	}
+	else
+	{
+		if(elementInBody(el) && 
+		l.substring(0,6) == articlePrefix &&
+		l.substring(6,10) != "File")
+		{
+			article = l.split("/").pop();
+			valid = true;
+		}
+	}
+
+	return [valid, article]
+
+}
+
 function addMouseOverEvent()
 {
-	$('a').hover(function(e){
-		var link = $(this).attr("href");
-		if(!showing && extOn && link.substring(0,6) == articlePrefix)
+	$('a').hover(function(e)
+	{
+		if(!showing && extOn)
 		{
-			var x = parseInt(e.clientX, 10);
-			var y = parseInt(e.clientY, 10);
-			var article = link.split("/").pop();
-			showLoader(x,y);
-			getPreview(article);
+			var el = e.currentTarget;
+			var check  = validLink(el);
+			var valid = check[0];
+			var article = check[1];
+			if(valid)
+			{
+				var x = parseInt(e.clientX, 10);
+				var y = parseInt(e.clientY, 10);
+				showLoader(x,y);
+				getPreview(article);
+			}
 		}
 	}, function(){
 		makeInvisible();
@@ -46,12 +98,10 @@ function addMouseMoveEvent()
 	{
 		if(showing)
 		{
-			// console.log("mousemove");
 			offY = parseInt(window.pageYOffset, 10);
 			offX = parseInt(window.pageXOffset, 10);
 			var x = e.clientX - offX;
 			var y = e.clientY + offY;
-			// console.log("(" + x + ", " + y + ")");
 
 			var divX = parseInt(div.style.left, 10);
 			var divY = parseInt(div.style.top, 10);
@@ -105,6 +155,7 @@ function setText(text)
 	img.style.display = "None";
 	var node = document.createTextNode(text);
 	para.innerHTML = "";
+	para.style.fontSize = "16px";
 	div.style.width = popupWidth + "px";
 	para.appendChild(node);
 
